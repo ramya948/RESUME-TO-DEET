@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin Login – DEET System</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
+    <style>
+        .login-container {
+            max-width: 400px;
+            margin: 4rem auto;
+        }
+    </style>
+</head>
+
+<body>
+
+    <nav class="navbar">
+        <div class="navbar-inner">
+            <a href="/" class="logo">
+                <span>📄</span>
+                <span>Resume-to-DEET</span>
+                <span class="logo-badge" style="background:var(--warning)">ADMIN</span>
+            </a>
+        </div>
+    </nav>
+
+    <main class="page">
+        <div class="container login-container">
+            <div class="card">
+                <div class="card-header" style="justify-content:center; margin-bottom:2rem;">
+                    <div class="card-icon amber">🔒</div>
+                    <h2>Admin Portal</h2>
+                </div>
+
+                {% if error %}
+                <div class="alert alert-danger" style="margin-bottom:1.5rem;">
+                    ⚠️ <span>{{ error }}</span>
+                </div>
+                {% endif %}
+
+                <form action="/admin/login" method="POST">
+                    <div class="form-group">
+                        <label class="form-label" for="password">Admin Password</label>
+                        <input class="form-control" type="password" id="password" name="password" required
+                            placeholder="Enter password..." />
+                        <p style="font-size:0.75rem; color:var(--text-faint); margin-top:0.4rem;">Hint: admin123</p>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-full" style="margin-top:1rem;">
+                        Login
+                    </button>
+                </form>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <p>Resume-to-DEET · Admin Portal</p>
+    </footer>
+
+</body>
+
+</html>
