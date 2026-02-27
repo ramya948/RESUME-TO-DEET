@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Preview & Edit – DEET Registration</title>
+    <meta name="description" content="Review and edit the auto-extracted resume fields before submitting to DEET." />
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
+</head>
+
+<body>
+
+    <nav class="navbar">
+        <div class="navbar-inner">
+            <a href="/" class="logo">
+                <span>📄</span>
+                <span>Resume-to-DEET</span>
+                <span class="logo-badge">AI</span>
+            </a>
+            <div class="nav-links">
+                <a href="/">← Start Over</a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="page">
+        <div class="container container-lg">
+
+            <!-- Steps -->
+            <div class="steps">
+                <div class="step done">
+                    <span class="step-num">✓</span>
+                    <span>Upload</span>
+                </div>
+                <div class="step-line"></div>
+                <div class="step active">
+                    <span class="step-num">2</span>
+                    <span>Preview</span>
+                </div>
+                <div class="step-line"></div>
+                <div class="step">
+                    <span class="step-num">3</span>
+                    <span>Submit</span>
+                </div>
+            </div>
+
+            <!-- Accuracy Card -->
+            {% set acc = data.accuracy %}
+            <div class="card" style="margin-bottom:1.5rem;">
+                <div class="accuracy-section">
+                    <div class="accuracy-header">
+                        <span class="accuracy-label">📊 Extraction Accuracy</span>
+                        <span class="accuracy-pct">{{ acc.percentage }}%</span>
+                    </div>
+                    <div class="progress-track">
+                        <div class="progress-bar" id="progressBar" style="width: 0%"></div>
+                    </div>
+                </div>
+
+                <!-- Missing fields -->
+                {% if acc.missing_fields %}
+                <div class="alert alert-warning">
+                    <span>⚠️</span>
+                    <span>
+                        <strong>Missing fields detected:</strong>
+                        {{ acc.missing_fields | join(', ') | title }}.
+                        Please fill them in manually below.
+                    </span>
+                </div>
+                {% else %}
+                <div class="alert alert-success">
+                    <span>✅</span>
+                    <span>All fields extracted successfully! Please review before submitting.</span>
+                </div>
+                {% endif %}
+
+                <div style="display:flex;gap:1rem;flex-wrap:wrap;">
+                    <div style="font-size:0.8rem;color:var(--text-muted);">
+                        <span style="color:#34d399">●</span> High confidence
+                    </div>
+                    <div style="font-size:0.8rem;color:var(--text-muted);">
+                        <span style="color:#fbbf24">●</span> Medium confidence
+                    </div>
+                    <div style="font-size:0.8rem;color:var(--text-muted);">
+                        <span style="color:#f87171">●</span> Low confidence
+                    </div>
+                    <div style="font-size:0.8rem;color:var(--text-muted);">
+                        <span style="color:#94a3b8">●</span> Missing
+                    </div>
+                </div>
+            </div>
+
+            <!-- Editable form -->
+            <form action="/submit" method="POST" id="previewForm">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-icon purple">👤</div>
+                        <h2>Personal Information</h2>
+                    </div>
+
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label class="form-label" for="name">
+                                Full Name
+                                <span class="confidence {{ acc.field_confidence.get('name', 'missing') }}">
+                                    {{ acc.field_confidence.get('name', 'missing') | upper }}
+                                </span>
+                            </label>
+                            <input class="form-control" type="text" id="name" name="name" value="{{ data.name }}"
+                                placeholder="e.g. John Doe" />
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="email">
+                                Email Address
+                                <span class="confidence {{ acc.field_confidence.get('email', 'missing') }}">
+                                    {{ acc.field_confidence.get('email', 'missing') | upper }}
+                                </span>
+                            </label>
+                            <input class="form-control" type="email" id="email" name="email" value="{{ data.email }}"
+                                placeholder="e.g. john@example.com" />
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="phone">
+                                Phone Number
+                                <span class="confidence {{ acc.field_confidence.get('phone', 'missing') }}">
+                                    {{ acc.field_confidence.get('phone', 'missing') | upper }}
+                                </span>
+                            </label>
+                            <input class="form-control" type="tel" id="phone" name="phone" value="{{ data.phone }}"
+                                placeholder="e.g. +1 555 000 0000" />
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="linkedin">LinkedIn</label>
+                            <input class="form-control" type="text" id="linkedin" name="linkedin"
+                                value="{{ data.linkedin }}" placeholder="linkedin.com/in/yourname" />
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="github">GitHub</label>
+                            <input class="form-control" type="text" id="github" name="github" value="{{ data.github }}"
+                                placeholder="github.com/yourusername" />
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Skills -->
+                <div class="card" style="margin-top:1.5rem;">
+                    <div class="card-header">
+                        <div class="card-icon cyan">🛠️</div>
+                        <h2>Skills</h2>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="skills">
+                            Identified Skills
+                            <span class="confidence {{ acc.field_confidence.get('skills', 'missing') }}">
+                                {{ acc.field_confidence.get('skills', 'missing') | upper }}
+                            </span>
+                        </label>
+                        <input class="form-control" type="text" id="skills" name="skills"
+                            value="{{ data.skills | join(', ') if data.skills else '' }}"
+                            placeholder="e.g. Python, Machine Learning, SQL" />
+                        <p style="font-size:0.75rem;color:var(--text-faint);margin-top:0.4rem;">
+                            Comma-separated. Edit freely.
+                        </p>
+                    </div>
+
+                    <!-- Skill chips (read-only preview) -->
+                    {% if data.skills %}
+                    <div class="pill-list" style="justify-content:flex-start;">
+                        {% for skill in data.skills %}
+                        <span class="pill skill">{{ skill }}</span>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Education -->
+                <div class="card" style="margin-top:1.5rem;">
+                    <div class="card-header">
+                        <div class="card-icon green">🎓</div>
+                        <h2>Education</h2>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="education">
+                            Education Details
+                            <span class="confidence {{ acc.field_confidence.get('education', 'missing') }}">
+                                {{ acc.field_confidence.get('education', 'missing') | upper }}
+                            </span>
+                        </label>
+                        <textarea class="form-control" id="education" name="education"
+                            placeholder="Degree, institution, year…"
+                            style="min-height:100px;">{{ data.education }}</textarea>
+                    </div>
+                </div>
+
+                <!-- Experience -->
+                <div class="card" style="margin-top:1.5rem;">
+                    <div class="card-header">
+                        <div class="card-icon amber">💼</div>
+                        <h2>Work Experience</h2>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="experience">
+                            Experience Details
+                            <span class="confidence {{ acc.field_confidence.get('experience', 'missing') }}">
+                                {{ acc.field_confidence.get('experience', 'missing') | upper }}
+                            </span>
+                        </label>
+                        <textarea class="form-control" id="experience" name="experience"
+                            placeholder="Job titles, companies, dates, responsibilities…"
+                            style="min-height:120px;">{{ data.experience }}</textarea>
+                    </div>
+                </div>
+
+                <!-- Certifications -->
+                <div class="card" style="margin-top:1.5rem;">
+                    <div class="card-header">
+                        <div class="card-icon purple">🏅</div>
+                        <h2>Certifications</h2>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="certifications">
+                            Certifications & Licenses
+                            <span class="confidence {{ acc.field_confidence.get('certifications', 'missing') }}">
+                                {{ acc.field_confidence.get('certifications', 'missing') | upper }}
+                            </span>
+                        </label>
+                        <textarea class="form-control" id="certifications" name="certifications"
+                            placeholder="e.g. AWS Certified Developer, Google Analytics…">{{ data.certifications }}</textarea>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="action-row" style="margin-top:2rem;">
+                    <a href="/" class="btn btn-secondary">← Re-upload</a>
+                    <a href="/download-json" class="btn btn-outline">⬇️ Download JSON</a>
+                    <button type="submit" class="btn btn-success btn-lg" style="margin-left:auto;">
+                        🚀 Submit Registration
+                    </button>
+                </div>
+            </form>
+
+            <!-- Debug / Raw Text -->
+            <div class="card debug-section" style="margin-top:1.5rem;">
+                <details>
+                    <summary>🔍 Debug: Raw Extracted Text</summary>
+                    <pre>{{ data.raw_text }}</pre>
+                </details>
+            </div>
+
+        </div>
+    </main>
+
+    <footer>
+        <p>Resume-to-DEET · Powered by spaCy, Tesseract OCR &amp; Flask · Open Source</p>
+    </footer>
+
+    <script>
+        // Animate progress bar
+        window.addEventListener('load', () => {
+            const bar = document.getElementById('progressBar');
+            setTimeout(() => {
+                bar.style.width = '{{ acc.percentage }}%';
+            }, 200);
+        });
+    </script>
+</body>
+
+</html>
