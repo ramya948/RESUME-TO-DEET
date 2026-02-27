@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Registration Successful – DEET System</title>
+    <meta name="description" content="Your DEET registration has been submitted successfully." />
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
+</head>
+
+<body>
+
+    <nav class="navbar">
+        <div class="navbar-inner">
+            <a href="/" class="logo">
+                <span>📄</span>
+                <span>Resume-to-DEET</span>
+                <span class="logo-badge">AI</span>
+            </a>
+            <div class="nav-links">
+                <a href="/">New Registration</a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="page">
+        <div class="container">
+
+            <!-- Steps -->
+            <div class="steps">
+                <div class="step done">
+                    <span class="step-num">✓</span>
+                    <span>Upload</span>
+                </div>
+                <div class="step-line"></div>
+                <div class="step done">
+                    <span class="step-num">✓</span>
+                    <span>Preview</span>
+                </div>
+                <div class="step-line"></div>
+                <div class="step active">
+                    <span class="step-num">3</span>
+                    <span>Submit</span>
+                </div>
+            </div>
+
+            <div class="card" style="text-align:center;padding:3rem 2rem;">
+                <div class="success-icon">🎉</div>
+                <h1 style="font-size:1.7rem;font-weight:800;margin-bottom:0.5rem;">Registration Submitted!</h1>
+                <p style="color:var(--text-muted);margin-bottom:1.5rem;">
+                    Your DEET application has been successfully submitted.
+                </p>
+                <div class="reg-id">{{ data.registration_id }}</div>
+                <p style="color:var(--text-faint);font-size:0.8rem;margin-top:0.75rem;margin-bottom:2rem;">
+                    Save this registration ID for your records.
+                </p>
+
+                <div class="section-divider"></div>
+
+                <!-- Summary table -->
+                <table class="summary-table" style="text-align:left;margin-bottom:2rem;">
+                    <tbody>
+                        <tr>
+                            <td>Full Name</td>
+                            <td>{{ data.name or '—' }}</td>
+                        </tr>
+                        <tr>
+                            <td>Email</td>
+                            <td>{{ data.email or '—' }}</td>
+                        </tr>
+                        <tr>
+                            <td>Phone</td>
+                            <td>{{ data.phone or '—' }}</td>
+                        </tr>
+                        {% if data.linkedin %}
+                        <tr>
+                            <td>LinkedIn</td>
+                            <td>{{ data.linkedin }}</td>
+                        </tr>
+                        {% endif %}
+                        {% if data.github %}
+                        <tr>
+                            <td>GitHub</td>
+                            <td>{{ data.github }}</td>
+                        </tr>
+                        {% endif %}
+                        <tr>
+                            <td>Skills</td>
+                            <td>
+                                {% if data.skills %}
+                                {% for skill in data.skills %}
+                                <span class="pill skill" style="margin:2px 2px;">{{ skill }}</span>
+                                {% endfor %}
+                                {% else %}
+                                —
+                                {% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Education</td>
+                            <td style="white-space:pre-wrap;">{{ data.education or '—' }}</td>
+                        </tr>
+                        <tr>
+                            <td>Experience</td>
+                            <td style="white-space:pre-wrap;">{{ data.experience or '—' }}</td>
+                        </tr>
+                        <tr>
+                            <td>Certifications</td>
+                            <td style="white-space:pre-wrap;">{{ data.certifications or '—' }}</td>
+                        </tr>
+                        <tr>
+                            <td>Status</td>
+                            <td>
+                                <span style="color:var(--success);font-weight:700;">
+                                    ✅ {{ data.registration_status }}
+                                </span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="action-row" style="justify-content:center;">
+                    <a href="/" class="btn btn-secondary">
+                        ← Register Another
+                    </a>
+                    <a href="/download-pdf" class="btn btn-primary">
+                        ⬇️ Download PDF
+                    </a>
+                </div>
+            </div>
+
+            {% if jobs %}
+            <div class="card" style="margin-top:1.5rem;text-align:left;">
+                <h2
+                    style="font-size:1.3rem;font-weight:700;margin-bottom:1rem;display:flex;align-items:center;gap:8px;">
+                    <span style="font-size:1.5rem;">🎯</span> Recommended Jobs
+                </h2>
+                <p style="color:var(--text-muted);font-size:0.9rem;margin-bottom:1.5rem;">
+                    Based on your extracted skills and experience, here are top job matches for you:
+                </p>
+
+                <div style="display:flex;flex-direction:column;gap:1rem;">
+                    {% for rec in jobs %}
+                    <div
+                        style="background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm);padding:1.25rem;transition:all 0.2s ease;">
+                        <div
+                            style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:0.5rem;">
+                            <h3 style="font-size:1.1rem;font-weight:600;color:var(--text);">{{ rec.job.title }}</h3>
+                            <div
+                                style="background:rgba(16,185,129,0.15);color:#34d399;padding:4px 10px;border-radius:999px;font-size:0.8rem;font-weight:700;">
+                                {{ rec.match_percentage }}% Match
+                            </div>
+                        </div>
+
+                        <div
+                            style="display:flex;gap:1.5rem;font-size:0.85rem;color:var(--text-muted);margin-bottom:0.75rem;">
+                            <span>📍 {{ rec.job.location }}</span>
+                            <span>🎓 {{ rec.job.min_qualification }}</span>
+                            <span>💼 {{ rec.job.experience_required }}</span>
+                        </div>
+
+                        {% if rec.missing_skills %}
+                        <div style="font-size:0.85rem;">
+                            <strong style="color:var(--warning);">Missing Skills:</strong>
+                            <span style="color:var(--text-faint);">{{ rec.missing_skills | join(', ') }}</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+        </div>
+    </main>
+
+    <footer>
+        <p>Resume-to-DEET · Powered by spaCy, Tesseract OCR &amp; Flask · Open Source</p>
+    </footer>
+
+</body>
+
+</html>
