@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Resume Upload – DEET Registration System</title>
+  <meta name="description"
+    content="Upload your resume PDF or image to auto-fill the DEET registration form instantly." />
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
+</head>
+
+<body>
+
+  <!-- Navbar -->
+  <nav class="navbar">
+    <div class="navbar-inner">
+      <a href="/" class="logo">
+        <span>📄</span>
+        <span>Resume-to-DEET</span>
+        <span class="logo-badge">AI</span>
+      </a>
+      <div class="nav-links">
+        <a href="/">Upload</a>
+        <a href="https://github.com" target="_blank">Docs</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Loading Overlay -->
+  <div class="loading-overlay" id="loadingOverlay">
+    <div class="spinner"></div>
+    <div class="loading-text" id="loadingText">Extracting resume data…</div>
+    <p style="color:var(--text-faint);font-size:0.8rem;max-width:260px;text-align:center;">
+      Running OCR / PDF parsing and NLP analysis. This may take a few seconds.
+    </p>
+  </div>
+
+  <main class="page">
+    <div class="container">
+      <!-- Hero -->
+      <div class="hero">
+        <div class="hero-tag">⚡ Instant AI Registration</div>
+        <h1>Resume-to-DEET<br />Registration System</h1>
+        <p>Upload your resume and let AI auto-fill your DEET application in seconds.</p>
+      </div>
+
+      <!-- Steps -->
+      <div class="steps">
+        <div class="step active">
+          <span class="step-num">1</span>
+          <span>Upload</span>
+        </div>
+        <div class="step-line"></div>
+        <div class="step">
+          <span class="step-num">2</span>
+          <span>Preview</span>
+        </div>
+        <div class="step-line"></div>
+        <div class="step">
+          <span class="step-num">3</span>
+          <span>Submit</span>
+        </div>
+      </div>
+
+      <!-- Error Alert -->
+      {% if error %}
+      <div class="alert alert-danger" style="margin-bottom:1.5rem;">
+        ⚠️ <span>{{ error }}</span>
+      </div>
+      {% endif %}
+
+      <!-- Upload Card -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-icon purple">📎</div>
+          <h2>Upload Your Resume</h2>
+        </div>
+
+        <form id="uploadForm" action="/upload" method="POST" enctype="multipart/form-data">
+          <div class="drop-zone" id="dropZone">
+            <input type="file" name="resume" id="resumeInput" accept=".pdf,.png,.jpg,.jpeg,.bmp,.tiff,.webp" />
+            <span class="drop-icon">📂</span>
+            <h3>Drag & Drop your resume here</h3>
+            <p>or click to browse from your computer</p>
+            <div class="pill-list">
+              <span class="pill">PDF</span>
+              <span class="pill">PNG</span>
+              <span class="pill">JPG</span>
+              <span class="pill">JPEG</span>
+              <span class="pill">TIFF</span>
+              <span class="pill">BMP</span>
+            </div>
+          </div>
+          <div class="file-chosen" id="fileName">No file selected</div>
+
+          <div style="margin-top:1.5rem;">
+            <button type="submit" class="btn btn-primary btn-lg btn-full" id="submitBtn">
+              <span>🚀</span> Extract & Auto-Fill Form
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- How it works -->
+      <div class="card" style="margin-top:1.5rem;">
+        <div class="card-header">
+          <div class="card-icon cyan">💡</div>
+          <h2>How it Works</h2>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:1.25rem;">
+          <div style="text-align:center;">
+            <div style="font-size:1.8rem;margin-bottom:0.5rem;">📤</div>
+            <div style="font-weight:600;font-size:0.9rem;margin-bottom:0.25rem;">Upload Resume</div>
+            <div style="color:var(--text-muted);font-size:0.8rem;">PDF or image formats supported</div>
+          </div>
+          <div style="text-align:center;">
+            <div style="font-size:1.8rem;margin-bottom:0.5rem;">🤖</div>
+            <div style="font-weight:600;font-size:0.9rem;margin-bottom:0.25rem;">AI Extraction</div>
+            <div style="color:var(--text-muted);font-size:0.8rem;">OCR + NLP parse your details</div>
+          </div>
+          <div style="text-align:center;">
+            <div style="font-size:1.8rem;margin-bottom:0.5rem;">✏️</div>
+            <div style="font-weight:600;font-size:0.9rem;margin-bottom:0.25rem;">Review & Edit</div>
+            <div style="color:var(--text-muted);font-size:0.8rem;">Verify auto-filled fields</div>
+          </div>
+          <div style="text-align:center;">
+            <div style="font-size:1.8rem;margin-bottom:0.5rem;">✅</div>
+            <div style="font-weight:600;font-size:0.9rem;margin-bottom:0.25rem;">Submit</div>
+            <div style="color:var(--text-muted);font-size:0.8rem;">One-click DEET registration</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <footer>
+    <p>Resume-to-DEET · Powered by spaCy, Tesseract OCR &amp; Flask · Open Source · <a href="/admin/login"
+        style="color:var(--text-muted);text-decoration:underline;">Admin Portal</a></p>
+  </footer>
+
+  <script>
+    const dropZone = document.getElementById('dropZone');
+    const input = document.getElementById('resumeInput');
+    const fileName = document.getElementById('fileName');
+    const form = document.getElementById('uploadForm');
+    const overlay = document.getElementById('loadingOverlay');
+    const loadingText = document.getElementById('loadingText');
+
+    // File name display
+    input.addEventListener('change', () => {
+      if (input.files.length > 0) {
+        fileName.textContent = '📎 ' + input.files[0].name;
+      }
+    });
+
+    // Drag-and-drop
+    dropZone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      dropZone.classList.add('drag-over');
+    });
+    dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+    dropZone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dropZone.classList.remove('drag-over');
+      const dt = e.dataTransfer;
+      if (dt.files.length) {
+        input.files = dt.files;
+        fileName.textContent = '📎 ' + dt.files[0].name;
+      }
+    });
+
+    // Loading overlay on submit
+    const loadingMessages = [
+      'Extracting resume data…',
+      'Running NLP analysis…',
+      'Identifying skills & experience…',
+      'Building your profile…',
+    ];
+    let msgIndex = 0;
+
+    form.addEventListener('submit', (e) => {
+      if (!input.files.length) return;
+      overlay.classList.add('show');
+      setInterval(() => {
+        msgIndex = (msgIndex + 1) % loadingMessages.length;
+        loadingText.textContent = loadingMessages[msgIndex];
+      }, 1500);
+    });
+  </script>
+</body>
+
+</html>
