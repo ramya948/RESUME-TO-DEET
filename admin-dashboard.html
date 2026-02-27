@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin Dashboard – DEET System</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            overflow: hidden;
+            /* No scrollbars on body */
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background-color: var(--bg-body, #0f172a);
+        }
+
+        /* Fixed navbar height */
+        .navbar {
+            flex-shrink: 0;
+            height: 60px;
+        }
+
+        .dashboard-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            height: calc(100vh - 60px);
+            overflow: hidden;
+            /* Prevent internal scroll */
+            padding: 1rem 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .dashboard-header {
+            flex-shrink: 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            margin-bottom: 1rem;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            flex-shrink: 0;
+            margin-bottom: 1rem;
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .stat-val {
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: var(--text);
+            line-height: 1;
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            flex: 1;
+            /* allow charts to flexibly fill remaining middle space */
+            min-height: 0;
+            /* prevent blowout */
+            margin-bottom: 1rem;
+        }
+
+        .chart-container {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+        }
+
+        .chart-title {
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+            text-align: center;
+            flex-shrink: 0;
+        }
+
+        .chart-wrapper {
+            flex: 1;
+            position: relative;
+            min-height: 0;
+        }
+
+        .table-container {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.8rem;
+            table-layout: fixed;
+        }
+
+        .data-table th,
+        .data-table td {
+            padding: 0.5rem 0.75rem;
+            border-bottom: 1px solid var(--border);
+            text-align: left;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .data-table th {
+            color: var(--text-muted);
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.7rem;
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .data-table tr:hover td {
+            background: rgba(255, 255, 255, 0.02);
+        }
+    </style>
+</head>
+
+<body>
+
+    <nav class="navbar">
+        <div class="navbar-inner" style="max-width: 1400px;">
+            <a href="/admin/dashboard" class="logo">
+                <span>📄</span>
+                <span>Resume-to-DEET</span>
+                <span class="logo-badge" style="background:var(--warning)">ADMIN</span>
+            </a>
+            <div class="nav-links">
+                <a href="/admin/logout" class="btn btn-sm btn-outline"
+                    style="padding: 0.3rem 0.8rem; font-size: 0.8rem;">Logout</a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="dashboard-container">
+
+        <div class="dashboard-header">
+            <div>
+                <h1 style="font-size: 1.5rem; font-weight: 800; margin-bottom: 0.25rem;">Dashboard Overview</h1>
+                <p style="color: var(--text-muted); font-size: 0.85rem; margin:0;">Real-time statistics of user
+                    registrations.</p>
+            </div>
+        </div>
+
+        <!-- Key Metrics -->
+        <div class="dashboard-grid">
+            <div class="stat-card">
+                <div class="stat-label">Total Registrations</div>
+                <div class="stat-val" style="color: var(--primary-light);">{{ total_users }}</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Top Skill Demand</div>
+                <div class="stat-val" style="color: #60a5fa; font-size: 1.6rem; font-weight: 800;">
+                    {{ top_skills[0][0]|title if top_skills else 'N/A' }}
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Bachelors / Masters</div>
+                <div class="stat-val" style="color: var(--success);">
+                    {{ education_data.get('Bachelors', 0) }} / {{ education_data.get('Masters', 0) }}
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts -->
+        <div class="charts-grid">
+            <div class="chart-container">
+                <h3 class="chart-title">Top 10 Extracted Skills</h3>
+                <div class="chart-wrapper">
+                    <canvas id="skillsChart"></canvas>
+                </div>
+            </div>
+
+            <div class="chart-container">
+                <h3 class="chart-title">Education Distribution</h3>
+                <div class="chart-wrapper">
+                    <canvas id="eduChart"></canvas>
+                </div>
+            </div>
+
+            <div class="chart-container">
+                <h3 class="chart-title">District/Location (Simulated)</h3>
+                <div class="chart-wrapper">
+                    <canvas id="locChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Registrations Table -->
+        <div class="table-container">
+            <h3 style="padding: 0.75rem 1rem; font-size: 0.95rem; border-bottom: 1px solid var(--border); margin:0;">
+                Recent Registrations (Showing latest 5)
+            </h3>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th style="width: 15%">Reg ID</th>
+                        <th style="width: 25%">Name</th>
+                        <th style="width: 25%">Email</th>
+                        <th style="width: 15%">Phone</th>
+                        <th style="width: 10%">Skills</th>
+                        <th style="width: 10%">Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for sub in submissions[:5] %}
+                    <tr>
+                        <td style="font-family: monospace; color: var(--accent-light);">{{ sub.registration_id
+                            }}</td>
+                        <td style="font-weight: 500;">{{ sub.name or '—' }}</td>
+                        <td>{{ sub.email or '—' }}</td>
+                        <td>{{ sub.phone or '—' }}</td>
+                        <td>{{ sub.skills|length }}</td>
+                        <td style="color: var(--success); font-weight: 600;">{{ sub.registration_status }}</td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="6" style="text-align: center; padding: 2rem; color: var(--text-muted);">No
+                            registrations yet.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+    </main>
+
+    <!-- Chart.js Setup -->
+    <script>
+        Chart.defaults.color = '#94a3b8';
+        Chart.defaults.font.family = 'Inter';
+
+        // Skills Chart (Bar)
+        const skillsCtx = document.getElementById('skillsChart').getContext('2d');
+        const skillsData = {{ top_skills | tojson | safe }};
+        new Chart(skillsCtx, {
+            type: 'bar',
+            data: {
+                labels: skillsData.map(d => d[0].toUpperCase()),
+                datasets: [{
+                    label: 'Count',
+                    data: skillsData.map(d => d[1]),
+                    backgroundColor: ['#60a5fa', '#34d399', '#f472b6', '#a78bfa', '#fbbf24', '#38bdf8', '#2dd4bf', '#818cf8', '#e879f9', '#facc15'],
+                    borderWidth: 0,
+                    borderRadius: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.1)' }, ticks: { color: '#e2e8f0', font: { weight: 'bold' } } },
+                    x: { grid: { display: false }, ticks: { color: '#e2e8f0', font: { weight: 'bold' } } }
+                }
+            }
+        });
+
+        // Education Chart (Doughnut)
+        const eduCtx = document.getElementById('eduChart').getContext('2d');
+        const eduData = {{ education_data | tojson | safe }};
+        new Chart(eduCtx, {
+            type: 'doughnut',
+            data: {
+                labels: Object.keys(eduData),
+                datasets: [{
+                    data: Object.values(eduData),
+                    backgroundColor: ['#3b82f6', '#10b981', '#64748b'],
+                    borderWidth: 2,
+                    borderColor: '#0f172a',
+                    hoverOffset: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '70%',
+                plugins: {
+                    legend: { position: 'right', labels: { color: '#f8fafc', font: { weight: 'bold', size: 12 }, padding: 20 } }
+                }
+            }
+        });
+
+        // Location Chart (Pie)
+        const locCtx = document.getElementById('locChart').getContext('2d');
+        const locData = {{ district_data | tojson | safe }};
+        new Chart(locCtx, {
+            type: 'pie',
+            data: {
+                labels: Object.keys(locData),
+                datasets: [{
+                    data: Object.values(locData),
+                    backgroundColor: ['#f59e0b', '#06b6d4', '#ec4899', '#8b5cf6'],
+                    borderWidth: 2,
+                    borderColor: '#0f172a',
+                    hoverOffset: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'right', labels: { color: '#f8fafc', font: { weight: 'bold', size: 12 }, padding: 20 } }
+                }
+            }
+        });
+    </script>
+
+</body>
+
+</html>
